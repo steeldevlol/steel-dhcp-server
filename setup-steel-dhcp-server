@@ -4,16 +4,21 @@ SCRIPT_PATH="/usr/bin/steel-dhcp-server"
 SERVICE_PATH="/etc/systemd/system/steel-dhcp-server.service"
 URL="https://raw.githubusercontent.com/steeldevlol/steel-dhcp-server/refs/heads/main/steel-dhcp-server"
 
+echo "[*] Updating packages..."
 apt-get update -y >/dev/null 2>&1 || true
+
+echo "[*] Removing old install (if any)..."
 systemctl stop steel-dhcp-server.service >/dev/null 2>&1 || true
 systemctl disable steel-dhcp-server.service >/dev/null 2>&1 || true
 rm -f /usr/local/bin/steel-dhcp-server >/dev/null 2>&1 || true
 rm -f /usr/bin/steel-dhcp-server >/dev/null 2>&1 || true
 rm -f /etc/systemd/system/steel-dhcp-server.service >/dev/null 2>&1 || true
 
+echo "[*] Downloading latest steel-dhcp-server script..."
 curl -fsSL "$URL" -o "$SCRIPT_PATH" >/dev/null 2>&1 || true
 chmod +x "$SCRIPT_PATH" >/dev/null 2>&1 || true
 
+echo "[*] Setting up systemd service..."
 cat <<EOF > "$SERVICE_PATH"
 [Unit]
 Description=Steel DHCP Server
@@ -28,7 +33,10 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
+echo "[*] Reloading systemd and starting service..."
 systemctl daemon-reexec >/dev/null 2>&1 || true
 systemctl daemon-reload >/dev/null 2>&1 || true
 systemctl enable steel-dhcp-server.service >/dev/null 2>&1 || true
 systemctl start steel-dhcp-server.service >/dev/null 2>&1 || true
+
+echo "[✓] Steel DHCP Server is installed and running."
