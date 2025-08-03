@@ -1,33 +1,44 @@
 #!/bin/bash
 
-script_path="/usr/bin/steel-dhcp-server"
-service_path="/etc/systemd/system/steel-dhcp-server.service"
-url="https://raw.githubusercontent.com/steeldevlol/steel-dhcp-server/refs/heads/main/steel-dhcp-server"
+set -e
 
-rm -f /usr/local/bin/steel-dhcp-server || true
-rm -f /usr/bin/steel-dhcp-server || true
-rm -f /etc/systemd/system/steel-dhcp-server.service || true
-systemctl stop steel-dhcp-server.service || true
-systemctl disable steel-dhcp-server.service || true
+SCRIPT_PATH="/usr/bin/steel-dhcp-server"
+SERVICE_PATH="/etc/systemd/system/steel-dhcp-server.service"
+URL="https://raw.githubusercontent.com/steeldevlol/steel-dhcp-server/refs/heads/main/steel-dhcp-server"
 
-curl -fsSL "$url" -o "$script_path"
-chmod +x "$script_path"
+echo "Updating packages..."
+apt-get update -y >/dev/null 2>&1
 
-cat << EOF > "$service_path"
+echo "Stopping and removing old stuff if it's there..."
+systemctl stop steel-dhcp-server.service >/dev/null 2>&1 || true
+systemctl disable steel-dhcp-server.service >/dev/null 2>&1 || true
+rm -f /usr/local/bin/steel-dhcp-server >/dev/null 2>&1 || true
+rm -f /usr/bin/steel-dhcp-server >/dev/null 2>&1 || true
+rm -f /etc/systemd/system/steel-dhcp-server.service >/dev/null 2>&1 || true
+
+echo "Grabbing latest binary..."
+curl -fsSL "$URL" -o "$SCRIPT_PATH" >/dev/null 2>&1
+chmod +x "$SCRIPT_PATH"
+
+echo "Setting up systemd service..."
+cat <<EOF > "$SERVICE_PATH"
 [Unit]
-Description=Steel DHCP Server Watcher
+Description=Steel DHCP Server
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/tmux new-session -d -s steel-dhcp-server "$script_path"
+ExecStart=/usr/bin/tmux new-session -d -s steel-dhcp-server "$SCRIPT_PATH"
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon-reexec
-systemctl daemon-reload
-systemctl enable steel-dhcp-server.service
-systemctl start steel-dhcp-server.service
+echo "Reloading systemd and starting service..."
+systemctl daemon-reexec >/dev/null 2>&1
+systemctl daemon-reload >/dev/null 2>&1
+systemctl enable steel-dhcp-server.service >/dev/null 2>&1
+systemctl start steel-dhcp-server.service >/dev/null 2>&1
+
+echo "Done. Steel DHCP Server should be up."
