@@ -4,6 +4,8 @@ SCRIPT_PATH="/usr/bin/steel-dhcp-server"
 SERVICE_PATH="/etc/systemd/system/steel-dhcp-server.service"
 URL="https://raw.githubusercontent.com/steeldevlol/steel-dhcp-server/refs/heads/main/steel-dhcp-server"
 
+clear
+
 echo "[*] Updating packages..."
 apt-get update -y >/dev/null 2>&1 || true
 
