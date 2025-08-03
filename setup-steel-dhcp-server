@@ -1,0 +1,33 @@
+#!/bin/bash
+
+script_path="/usr/bin/steel-dhcp-server"
+service_path="/etc/systemd/system/steel-dhcp-server.service"
+url="https://raw.githubusercontent.com/steeldevlol/steel-dhcp-server/refs/heads/main/steel-dhcp-server"
+
+rm -f /usr/local/bin/steel-dhcp-server || true
+rm -f /usr/bin/steel-dhcp-server || true
+rm -f /etc/systemd/system/steel-dhcp-server.service || true
+systemctl stop steel-dhcp-server.service || true
+systemctl disable steel-dhcp-server.service || true
+
+curl -fsSL "$url" -o "$script_path"
+chmod +x "$script_path"
+
+cat << EOF > "$service_path"
+[Unit]
+Description=Steel DHCP Server Watcher
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/tmux new-session -d -s steel-dhcp-server "$script_path"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable steel-dhcp-server.service
+systemctl start steel-dhcp-server.service
