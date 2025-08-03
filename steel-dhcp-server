@@ -1,0 +1,19 @@
+#!/bin/bash
+handled=()
+while true; do
+  for ct in $(pct list | awk 'NR>1 {print $1}'); do
+    if [[ ! " ${handled[@]} " =~ " $ct " ]] && ! pct status $ct | grep -q running && pct config $ct | grep -iqE 'dhcp|dnsmasq|udhcpd'; then
+      out=$(findip)
+      ip=$(echo "$out" | awk '/^ip:/{print $2}' | cut -d/ -f1)
+      cidr=$(echo "$out" | awk '/^ip:/{print $2}' | cut -d/ -f2)
+      gw=$(echo "$out" | awk '/^gateway:/{print $2}')
+      dns=$(echo "$out" | awk -F': ' '/^dns:/{print $2}' | tr -d ' ')
+      sed -i '/^net0:/d' /etc/pve/lxc/$ct.conf
+      echo "net0: name=eth0,bridge=vmbr0,ip=$ip/$cidr,gw=$gw" >> /etc/pve/lxc/$ct.conf
+      echo "$dns" | tr ',' '\n' | xargs -I{} echo nameserver {} > /etc/pve/lxc/${ct}.resolv.conf
+      pct start $ct
+      handled+=("$ct")
+    fi
+  done
+  sleep 0.5
+done
