@@ -1,26 +1,19 @@
 #!/bin/bash
 
-set -e
-
 SCRIPT_PATH="/usr/bin/steel-dhcp-server"
 SERVICE_PATH="/etc/systemd/system/steel-dhcp-server.service"
 URL="https://raw.githubusercontent.com/steeldevlol/steel-dhcp-server/refs/heads/main/steel-dhcp-server"
 
-echo "Updating packages..."
-apt-get update -y >/dev/null 2>&1
-
-echo "Stopping and removing old stuff if it's there..."
+apt-get update -y >/dev/null 2>&1 || true
 systemctl stop steel-dhcp-server.service >/dev/null 2>&1 || true
 systemctl disable steel-dhcp-server.service >/dev/null 2>&1 || true
 rm -f /usr/local/bin/steel-dhcp-server >/dev/null 2>&1 || true
 rm -f /usr/bin/steel-dhcp-server >/dev/null 2>&1 || true
 rm -f /etc/systemd/system/steel-dhcp-server.service >/dev/null 2>&1 || true
 
-echo "Grabbing latest binary..."
-curl -fsSL "$URL" -o "$SCRIPT_PATH" >/dev/null 2>&1
-chmod +x "$SCRIPT_PATH"
+curl -fsSL "$URL" -o "$SCRIPT_PATH" >/dev/null 2>&1 || true
+chmod +x "$SCRIPT_PATH" >/dev/null 2>&1 || true
 
-echo "Setting up systemd service..."
 cat <<EOF > "$SERVICE_PATH"
 [Unit]
 Description=Steel DHCP Server
@@ -35,10 +28,7 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-echo "Reloading systemd and starting service..."
-systemctl daemon-reexec >/dev/null 2>&1
-systemctl daemon-reload >/dev/null 2>&1
-systemctl enable steel-dhcp-server.service >/dev/null 2>&1
-systemctl start steel-dhcp-server.service >/dev/null 2>&1
-
-echo "Done. Steel DHCP Server should be up."
+systemctl daemon-reexec >/dev/null 2>&1 || true
+systemctl daemon-reload >/dev/null 2>&1 || true
+systemctl enable steel-dhcp-server.service >/dev/null 2>&1 || true
+systemctl start steel-dhcp-server.service >/dev/null 2>&1 || true
